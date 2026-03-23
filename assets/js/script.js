@@ -115,6 +115,97 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterBtns = document.querySelectorAll('.filter-btn');
     const projectCards = document.querySelectorAll('.project-card');
 
+    // Pagination variables
+    const cardsPerPage = 6;
+    let currentPage = 1;
+    let filteredCards = Array.from(projectCards);
+
+    // Function to initialize pagination
+    function initPagination() {
+        const paginationContainer = document.getElementById('pagination-container');
+        const paginationDots = document.getElementById('pagination-dots');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        if (!paginationContainer || filteredCards.length === 0) return;
+
+        const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+
+        // Hide pagination if only 1 page or less
+        if (totalPages <= 1) {
+            paginationContainer.classList.add('hidden');
+            return;
+        }
+
+        paginationContainer.classList.remove('hidden');
+
+        // Generate pagination dots
+        paginationDots.innerHTML = '';
+        for (let i = 1; i <= totalPages; i++) {
+            const dot = document.createElement('div');
+            dot.classList.add('pagination-dot');
+            if (i === currentPage) dot.classList.add('active');
+            dot.addEventListener('click', () => {
+                currentPage = i;
+                updatePagination();
+            });
+            paginationDots.appendChild(dot);
+        }
+
+        // Previous button
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                updatePagination();
+            }
+        });
+
+        // Next button
+        nextBtn.addEventListener('click', () => {
+            if (currentPage < totalPages) {
+                currentPage++;
+                updatePagination();
+            }
+        });
+
+        updatePagination();
+    }
+
+    // Function to update pagination display
+    function updatePagination() {
+        const paginationDots = document.getElementById('pagination-dots');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+
+        const totalPages = Math.ceil(filteredCards.length / cardsPerPage);
+
+        // Update dots
+        const dots = paginationDots.querySelectorAll('.pagination-dot');
+        dots.forEach((dot, index) => {
+            if (index + 1 === currentPage) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+
+        // Update button states
+        prevBtn.disabled = currentPage === 1;
+        nextBtn.disabled = currentPage === totalPages;
+
+        // Show/hide cards based on current page
+        filteredCards.forEach((card, index) => {
+            const pageIndex = Math.floor(index / cardsPerPage) + 1;
+            if (pageIndex === currentPage) {
+                card.classList.remove('hidden');
+                card.style.display = '';
+            } else {
+                card.classList.add('hidden');
+                card.style.display = 'none';
+            }
+        });
+    }
+
     // Handle category card filtering (for home page)
     if (categoryCards.length > 0 && projectCards.length > 0) {
         // Set default active state on page load
@@ -122,17 +213,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (allProjectsCard) {
             allProjectsCard.classList.add('active');
         }
-        
+
         categoryCards.forEach(card => {
             card.addEventListener('click', function() {
                 // Remove active class from all cards
                 categoryCards.forEach(c => c.classList.remove('active'));
-                
+
                 // Add active class to clicked card
                 card.classList.add('active');
-                
+
                 const filter = card.getAttribute('data-category');
-                
+
                 // Update filter buttons to match (on projects page)
                 filterBtns.forEach(btn => {
                     if (btn && btn.getAttribute('data-category') === filter) {
@@ -141,18 +232,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         btn.classList.remove('active');
                     }
                 });
-                
-                projectCards.forEach(project => {
-                    if (filter === 'all' || project.getAttribute('data-category') === filter) {
-                        project.classList.remove('hidden');
-                    } else {
-                        project.classList.add('hidden');
-                    }
+
+                // Filter cards
+                filteredCards = Array.from(projectCards).filter(project => {
+                    return filter === 'all' || project.getAttribute('data-category') === filter;
                 });
+
+                // Reset to page 1 when filtering
+                currentPage = 1;
+                initPagination();
             });
         });
     }
-    
+
     // Handle filter button filtering (for projects page)
     if (filterBtns.length > 0 && projectCards.length > 0) {
         // Set default active state on page load
@@ -160,17 +252,17 @@ document.addEventListener('DOMContentLoaded', function() {
         if (allProjectsBtn) {
             allProjectsBtn.classList.add('active');
         }
-        
+
         filterBtns.forEach(btn => {
             btn.addEventListener('click', function() {
                 // Remove active class from all buttons
                 filterBtns.forEach(b => b.classList.remove('active'));
-                
+
                 // Add active class to clicked button
                 btn.classList.add('active');
-                
+
                 const filter = btn.getAttribute('data-category');
-                
+
                 // Update category cards to match (on home page)
                 if (categoryCards.length > 0) {
                     categoryCards.forEach(card => {
@@ -181,15 +273,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     });
                 }
-                
-                projectCards.forEach(project => {
-                    if (filter === 'all' || project.getAttribute('data-category') === filter) {
-                        project.classList.remove('hidden');
-                    } else {
-                        project.classList.add('hidden');
-                    }
+
+                // Filter cards
+                filteredCards = Array.from(projectCards).filter(project => {
+                    return filter === 'all' || project.getAttribute('data-category') === filter;
                 });
+
+                // Reset to page 1 when filtering
+                currentPage = 1;
+                initPagination();
             });
         });
     }
+
+    // Initialize pagination on page load
+    initPagination();
 });
